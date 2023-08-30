@@ -401,7 +401,9 @@ MonoBehaviour:
   boidMesh: {fileID: -2432090755550338912, guid: cf9f7d2a99505e94caa0a7c5a8931cb2, type: 3}
   boidMaterial: {fileID: 2100000, guid: 3100428355b89e74db7aec3fe4c6d78b, type: 2}
   Shader: {fileID: 7200000, guid: 0fb7b6479106ea2478c0b433e6d48360, type: 3}
-  boidCount: 1000
+  boidCount: 5000
+  outputVel: []
+  outputAcc: []
 --- !u!4 &1206619348
 Transform:
   m_ObjectHideFlags: 0
@@ -411,7 +413,7 @@ Transform:
   m_GameObject: {fileID: 1206619346}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}

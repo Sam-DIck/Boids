@@ -9,7 +9,7 @@ public class FullscreenToggle : MonoBehaviour
     void Start()
     {
         Application.runInBackground = true;
-        Application.targetFrameRate = 60;
+        //Application.targetFrameRate = 60;
         Screen.fullScreen = true;
         Cursor.lockState = CursorLockMode.Locked;
     }

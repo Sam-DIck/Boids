@@ -22,7 +22,7 @@ public class BoidsManagerShader : MonoBehaviour
     uint threadGroupSize_updatePos;
     Vector3[] outputPos;
     public Vector3[] outputVel;
-    Vector3[] outputAcc;
+    public Vector3[] outputAcc;
 
     void OnEnable()
     {
@@ -53,24 +53,6 @@ public class BoidsManagerShader : MonoBehaviour
     }
     private void Update()
     {
-
-        #region Build Oct-Tree
-        /*Vector3 Min = Vector3.positiveInfinity;
-        Vector3 Max = Vector3.negativeInfinity;
-        for (int i = 0; i < boidCount; i++)
-        {
-            Min = Vector3.Min(Min, outputPos[i]);
-            Max = Vector3.Max(Max, outputPos[i]);
-        }
-        Bounds bounds = new Bounds((Min + Max) / 2, Max - Min);
-        OctTree<int> boidTree = new OctTree<int>(bounds);
-        for (int i = 0; i < boidCount; i++)
-        {
-            boidTree.Add(i, outputPos[i]);
-        }
-        treeBuffer.SetData((from pair in boidTree.FlattenToArray() orderby pair.item select pair.nodeId).ToArray());
-*/
-        #endregion
 
 
 
@@ -113,6 +95,17 @@ public class BoidsManagerShader : MonoBehaviour
         }
         
         #endregion
+    }
+
+    private void OnDrawGizmos()
+    {
+        if (outputPos != null&&outputPos.Length>0)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(outputPos[0], outputVel[0]);
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(outputPos[0], outputAcc[0]);
+        }
     }
 
     void OnDisable()
