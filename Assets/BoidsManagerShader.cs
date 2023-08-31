@@ -20,9 +20,11 @@ public class BoidsManagerShader : MonoBehaviour
     int UpdatePosVelKernal;
     uint threadGroupSize_calcForce;
     uint threadGroupSize_updatePos;
-    Vector3[] outputPos;
+    public Vector3[] outputPos;
     public Vector3[] outputVel;
     public Vector3[] outputAcc;
+    
+
 
     void OnEnable()
     {
@@ -53,7 +55,7 @@ public class BoidsManagerShader : MonoBehaviour
     }
     private void Update()
     {
-
+        
 
 
         #region Calculate Forces
@@ -97,16 +99,6 @@ public class BoidsManagerShader : MonoBehaviour
         #endregion
     }
 
-    private void OnDrawGizmos()
-    {
-        if (outputPos != null&&outputPos.Length>0)
-        {
-            Gizmos.color = Color.green;
-            Gizmos.DrawRay(outputPos[0], outputVel[0]);
-            Gizmos.color = Color.red;
-            Gizmos.DrawRay(outputPos[0], outputAcc[0]);
-        }
-    }
 
     void OnDisable()
     {
@@ -118,5 +110,10 @@ public class BoidsManagerShader : MonoBehaviour
         accBuffer = null;
         treeBuffer.Release();
         treeBuffer = null;
+    }
+
+    private void OnDestroy()
+    {
+        OnDisable();
     }
 }
