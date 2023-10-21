@@ -4,8 +4,17 @@ RWStructuredBuffer<int> treeBuffer;
 RWStructuredBuffer<float3> posBuffer;
 RWStructuredBuffer<float3> velBuffer;
 RWStructuredBuffer<float3> accBuffer;
+
+RWStructuredBuffer<float3> sphereCentres;
+RWStructuredBuffer<float> sphereRadius;
+
 float deltaTime;
-int boids;
+uint boids;
+uint spheres;
+
+float waterHeight;
+float waveSize;
+float time;
 
 float3 ClampMagnitude(float3 vec, float maxLength)
 {
@@ -17,23 +26,13 @@ float3 ClampMagnitude(float3 vec, float maxLength)
     return vec;
 }
 
-float ManDist(float3 vec)
-{
-    return abs(vec.x) + abs(vec.y) + abs(vec.y);
-
-}
-float EulSqrDist(float3 vec)
-{
-    return vec.x*vec.x + vec.y*vec.y + vec.z*vec.z;
-
-}
 
 [numthreads(128, 1, 1)]
 void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
 {
     
     //seek
-    float3 tarPos = float3(0, 0, 0);
+    float3 tarPos = float3(0, -1, 0);
     float3 tarVel = tarPos - posBuffer[id.x];
     float3 tarAcc = tarVel - velBuffer[id.x];
     accBuffer[id.x] = ClampMagnitude(tarAcc, 1)*0.75;
@@ -45,7 +44,7 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
     {
         if (icoh == id.x)
             continue;
-        if (EulSqrDist(posBuffer[id.x] - posBuffer[icoh]) < 15*15)
+        if (length(posBuffer[id.x] - posBuffer[icoh]) < 15)
         {
             avgInRange += posBuffer[icoh];
             count++;
@@ -56,7 +55,7 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
         tarPos = avgInRange / count;
         tarVel = tarPos - posBuffer[id.x];
         tarAcc = tarVel - velBuffer[id.x];
-        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 1;
+        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 0.75;
     }
     
     //separation
@@ -66,7 +65,7 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
     {
         if (isep == id.x)
             continue;
-        if (EulSqrDist(posBuffer[id.x] - posBuffer[isep]) < 3*3)
+        if (length(posBuffer[id.x] - posBuffer[isep]) < 3)
         {
             avgInRange += posBuffer[isep];
             count++;
@@ -77,7 +76,7 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
         tarPos = avgInRange / count;
         tarVel = posBuffer[id.x] - tarPos;
         tarAcc = tarVel - velBuffer[id.x];
-        accBuffer[id.x] += ClampMagnitude(tarAcc, 1)*2;
+        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
     }
     
     //alignment
@@ -85,9 +84,9 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
     count = 0;
     for (uint iali = 0; iali < boids; iali++)
     {
-        if (isep == id.x)
+        if (iali == id.x)
             continue;
-        if (EulSqrDist(posBuffer[id.x] - posBuffer[iali]) < 3*3)
+        if (length(posBuffer[id.x] - posBuffer[iali]) < 3)
         {
             avgInRange += velBuffer[iali];
             count++;
@@ -100,11 +99,25 @@ void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
         accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
     }
     
+    //flatten velocity
+    tarVel = velBuffer[id.x];
+    tarVel.y *= 0.75;
+    tarAcc = tarVel - velBuffer[id.x];
+    accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
+    
     // clamp speed
     float clampedLength = clamp(length(velBuffer[id.x]), 1, 5);
     tarVel = normalize(velBuffer[id.x]) * clampedLength;
     tarAcc = tarVel - velBuffer[id.x];
     accBuffer[id.x] += ClampMagnitude(tarAcc, 25)*4;
+    
+    // avoidance surface
+    
+    float waterheight = waterHeight - waveSize-1;
+    float dif = waterheight - posBuffer[id.x].y;
+    tarAcc = float3(0, -1, 0) * exp(-dif);
+    accBuffer[id.x] += tarAcc;
+    
 }
 
 #pragma kernel UpdateBoidPos
