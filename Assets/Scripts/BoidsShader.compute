@@ -1,0 +1,139 @@
+#pragma kernel UpdateBoidForces
+
+RWStructuredBuffer<int> treeBuffer;
+RWStructuredBuffer<float3> posBuffer;
+RWStructuredBuffer<float3> velBuffer;
+RWStructuredBuffer<float3> accBuffer;
+
+RWStructuredBuffer<float3> sphereCentres;
+RWStructuredBuffer<float> sphereRadius;
+
+float deltaTime;
+uint boids;
+uint spheres;
+
+float waterHeight;
+float waveSize;
+float time;
+
+float3 ClampMagnitude(float3 vec, float maxLength)
+{
+    float clampedLength = clamp(length(vec), 0, maxLength);
+    if (clampedLength != 0)
+    {
+        vec = normalize(vec) * clampedLength;
+    }
+    return vec;
+}
+
+
+[numthreads(128, 1, 1)]
+void UpdateBoidForces(uint3 id : SV_DispatchThreadID)
+{
+    
+    //seek
+    float3 tarPos = float3(0, -2, 0);
+    float3 tarVel = tarPos - posBuffer[id.x];
+    float3 tarAcc = tarVel - velBuffer[id.x];
+    accBuffer[id.x] = ClampMagnitude(tarAcc, 3)*0.75;
+    
+    // cohesion
+    float3 avgInRange = float3(0, 0, 0);
+    int count = 0;
+    for (uint icoh = 0; icoh < boids; icoh++)
+    {
+        if (icoh == id.x)
+            continue;
+        if (length(posBuffer[id.x] - posBuffer[icoh]) < 15)
+        {
+            avgInRange += posBuffer[icoh];
+            count++;
+        }
+    }
+    if (count != 0)
+    {
+        tarPos = avgInRange / count;
+        tarVel = tarPos - posBuffer[id.x];
+        tarAcc = tarVel - velBuffer[id.x];
+        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 0.75;
+    }
+    
+    //separation
+    avgInRange = float3(0, 0, 0);
+    count = 0;
+    for (uint isep = 0; isep < boids; isep++)
+    {
+        if (isep == id.x)
+            continue;
+        if (length(posBuffer[id.x] - posBuffer[isep]) < 3)
+        {
+            avgInRange += posBuffer[isep];
+            count++;
+        }
+    }
+    if (count != 0)
+    {
+        tarPos = avgInRange / count;
+        tarVel = posBuffer[id.x] - tarPos;
+        tarAcc = tarVel - velBuffer[id.x];
+        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
+    }
+    
+    //alignment
+    avgInRange = float3(0, 0, 0);
+    count = 0;
+    for (uint iali = 0; iali < boids; iali++)
+    {
+        if (iali == id.x)
+            continue;
+        if (length(posBuffer[id.x] - posBuffer[iali]) < 3)
+        {
+            avgInRange += velBuffer[iali];
+            count++;
+        }
+    }
+    if (count != 0)
+    {
+        tarVel = avgInRange / count;
+        tarAcc = tarVel - velBuffer[id.x];
+        accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
+    }
+    
+    //flatten velocity
+    tarVel = velBuffer[id.x];
+    tarVel.y *= 0.75;
+    tarAcc = tarVel - velBuffer[id.x];
+    accBuffer[id.x] += ClampMagnitude(tarAcc, 1) * 2;
+    
+    // clamp speed
+    float clampedLength = clamp(length(velBuffer[id.x]), 1, 5);
+    tarVel = normalize(velBuffer[id.x]) * clampedLength;
+    tarAcc = tarVel - velBuffer[id.x];
+    accBuffer[id.x] += ClampMagnitude(tarAcc, 25)*4;
+    
+    //// avoidance surface
+    
+    //float waterheight = waterHeight - waveSize - 1;
+    //float dif = waterheight - posBuffer[id.x].y;
+    //tarAcc = float3(0, -1, 0) * pow(max(-0.25*(4 - dif), 0), 4);
+    //accBuffer[id.x] += ClampMagnitude(tarAcc, 100);
+    
+    //// avoidance surface
+    
+    //waterheight = -4;
+    //dif = waterheight - posBuffer[id.x].y;
+    //tarAcc = float3(0, 1, 0) * pow(max(-0.25*(4 - dif), 0), 4);
+    //accBuffer[id.x] += ClampMagnitude(tarAcc, 100);
+    
+}
+
+#pragma kernel UpdateBoidPos
+
+[numthreads(128, 1, 1)]
+void UpdateBoidPos(uint3 id : SV_DispatchThreadID)
+{
+    accBuffer[id.x] -= velBuffer[id.x] * 0.01*deltaTime;
+    posBuffer[id.x] += velBuffer[id.x] + 0.5f * accBuffer[id.x] * deltaTime * deltaTime;
+    velBuffer[id.x] += accBuffer[id.x] * deltaTime;
+    
+}
