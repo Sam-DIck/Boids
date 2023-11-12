@@ -27,6 +27,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _Grass_Texture:
+        m_Texture: {fileID: 2800000, guid: 741008099cf8c0a4db118e05e4c81a8f, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _HeightTexture:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -49,12 +53,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Grass_Smoothness: 0
     - _Metallic: 0
     - _QueueControl: 0
     - _QueueOffset: 0
+    - _Sand_Smoothness: 0
     - _smoothness: 0.5
     m_Colors:
     - _BaseColour: {r: 0.245461, g: 0.6603774, b: 0.3094641, a: 0}
+    - _GrassColour: {r: 0, g: 1, b: 0.17550755, a: 1}
+    - _SandColor: {r: 0.7264151, g: 0.6731774, b: 0.46189037, a: 1}
     - _emmission: {r: 0, g: 0, b: 0, a: 0}
   m_BuildTextureStacks: []
 --- !u!114 &2652841310530520937
