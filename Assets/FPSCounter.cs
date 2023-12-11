@@ -10,7 +10,7 @@ public class FPSCounter : MonoBehaviour
     public List<float> frameTimes = new();
     public int frameLimit;
     public Text frameText;
-
+    public static float Sceneload;
     void Update()
     {
         frameTimes.Add(Time.unscaledDeltaTime);
@@ -43,6 +43,7 @@ public class FPSCounter : MonoBehaviour
             $"50%:\t{(int)(1 / t50)}\n" +
             $"75%:\t{(int)(1 / t75)}\n" +
             $"90%:\t{(int)(1 / t90)}\n" +
-            $"99%:\t{(int)(1 / t99)}";
+            $"99%:\t{(int)(1 / t99)}\n" +
+            $"Scene Load: {Sceneload}";
     }
 }

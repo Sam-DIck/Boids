@@ -1,8 +1,5 @@
 using System.Collections;
-using Unity.VisualScripting;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class ProceduralTerrain : MonoBehaviour
 {
@@ -13,13 +10,15 @@ public class ProceduralTerrain : MonoBehaviour
     public float persistance = 0.5f;
     Vector2[] octaveOffsets;
     public int Blocks = 16;
-    int _blocks = 16;
     // Start is called before the first frame update
     void Start()
     {
-        _blocks = Blocks;
-        StartCoroutine(GenerateTerrainCoroutine());
-        //terrain.terrainData.SyncHeightmap();
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        generateTerrain();
+        terrain.terrainData.SyncHeightmap();
+        sw.Stop();
+        float time = sw.ElapsedMilliseconds / 1000.0f;
+        FPSCounter.Sceneload = time;
     }
     void createOctaveOffsets()
     {
@@ -53,32 +52,7 @@ public class ProceduralTerrain : MonoBehaviour
         terrain.terrainData.SetHeightsDelayLOD(startX, startY, heights);
     }
     
-    IEnumerator GenerateTerrainCoroutine()
-    {
-        int blockSize = terrain.terrainData.heightmapResolution / _blocks;
-        for (int i = 0; i < _blocks; i++)
-        {
-            for (int j = 0; j < _blocks; j++)
-            {
-                generateTerrain(i * blockSize, j * blockSize, blockSize+1, blockSize+1, j, i);
-                yield return new WaitForEndOfFrame();
-            }
-        }
-        Debug.Log("terrain generation");
-        terrain.terrainData.SyncHeightmap();
-    }
-    /*private void OnValidate()
-    {
-        if (Application.isPlaying)
-        {
-            StopAllCoroutines();
-            terrain.terrainData.SyncHeightmap();
-            StartCoroutine(GenerateTerrainCoroutine());
-        }
-    }*/
-
-    static float sigmoid(float x) { return 1 / (1 + Mathf.Exp(-x)); }
-
+    
 
     static float falloff(float x, float y)
     {
